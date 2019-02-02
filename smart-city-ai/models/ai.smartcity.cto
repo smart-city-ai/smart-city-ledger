@@ -12,10 +12,6 @@
  * limitations under the License.
  */
 
-/**
- * Write your model definitions here
- */
-
 namespace ai.smartcity
 
 participant Business identified by businessId {
@@ -38,14 +34,19 @@ asset Seal identified by sealId {
     o String image 
 }
 
+concept sealStatus {
+  o String sealName
+  o String status
+}
+
 asset Document identified by docId {
     o String docId
-    o String[] sealNames
+    o sealStatus [] sealStatus
     o String image
-    o String[] status 
 }
 
 transaction VerifyDocument {
     --> Office office
-    --> Document document    
+    --> Document document   
+    o String sealName 
 }

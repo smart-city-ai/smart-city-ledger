@@ -12,6 +12,40 @@
  * limitations under the License.
  */
 
+rule ParticipantsSeeSelves {
+  	description: "participants see themselves"
+  	participant(p): "org.hyperledger.composer.system.Participant"
+  	operation: ALL
+    resource(r): "org.hyperledger.composer.system.Participant"
+  	condition: (r.getIdentifier() == p.getIdentifier())
+  	action: ALLOW
+}
+
+rule BusinessCanCreateDocument {
+	  description: "All business can create document"
+  	participant: "ai.smartcity.Business"
+  	operation: CREATE
+    resource: "ai.smartcity.Document"
+  	action: ALLOW
+}
+
+rule BusinessCanVerifyDocument {
+	  description: "All business can verify document"
+  	participant: "ai.smartcity.Business"
+  	operation: CREATE
+    resource: "ai.smartcity.VerifyDocument"
+  	action: ALLOW
+}
+
+rule TransactionalVerifyDocument {
+      description: "Description of the Transactional ACL rule"
+      participant: "ai.smartcity.Business"
+      operation: CREATE
+      resource: "ai.smartcity.Document"
+      transaction: "ai.smartcity.VerifyDocument"
+      action: ALLOW
+}
+
 rule NetworkAdminUser {
     description: "Grant business network administrators full access to user resources"
     participant: "org.hyperledger.composer.system.NetworkAdmin"
