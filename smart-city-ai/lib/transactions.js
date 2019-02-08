@@ -61,3 +61,26 @@ async function VerifyDocument(verifyDocument) {
             return assetRegistry.updateAll([doc]);
         });        
 }
+
+/**
+ * setup a demo
+ * @param {ai.smartcity.CreateDemo} createDemo - Create a Demo
+ * @transaction
+ */
+async function createDemo(){
+    const factory = getFactory();
+    const namespace = 'ai.smartcity';
+    const officeRegistry = await  getParticipantRegistry(namespace + '.Office');
+    
+    office1 = factory.newResource(namespace,'Office', 'MyOffice');
+    office1.name = "First Office";
+    office1.imageServiceAddress = '127.0.0.1:7000';
+    await officeRegistry.add(office1);
+
+    const bizRegistry = await  getParticipantRegistry(namespace + '.Business');
+    
+    biz1 = factory.newResource(namespace,'Business', 'MyBiz');
+    biz1.name = "First Biz";
+    await bizRegistry.add(biz1);    
+    
+}

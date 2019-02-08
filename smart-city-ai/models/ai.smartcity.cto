@@ -17,8 +17,6 @@ namespace ai.smartcity
 participant Business identified by businessId {
   o String businessId
   o String name
-  o String phoneNumber
-  o String email
 }
 
 participant Office identified by OfficeId {
@@ -49,4 +47,7 @@ transaction VerifyDocument {
     --> Office office
     --> Document document   
     o String sealName 
+}
+
+transaction CreateDemo {
 }
