@@ -13,11 +13,13 @@
 
 # REMOVE EXISTING REST SERVER, PLAYGROUND ETC
 docker rm -f $(docker ps -a | grep hyperledger/* | awk '{ print $1 }')
+docker rm -f $(docker ps -a | grep smart-city-ai | awk '{ print $1 }')
 
 docker pull hyperledger/composer-playground:latest
 docker pull hyperledger/composer-cli:latest
 docker pull hyperledger/composer-rest-server:latest
 
+uid=$(stat -c "%u:%g" .)
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -100,8 +102,9 @@ echo '{
 	"x-commitTimeout": 100
 }' > $(pwd)/loc-stage/connection.json
 
+set -e
 # CREATE PEER ADMIN CARD AND IMPORT
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -110,7 +113,7 @@ docker run \
   hyperledger/composer-cli:latest \
   card create -p loc-stage/connection.json -u PeerAdmin -r PeerAdmin -r ChannelAdmin -f /home/composer/loc-stage/PeerAdmin.card -c PeerAdmin/signcerts/Admin@org1.example.com-cert.pem -k PeerAdmin/keystore/114aab0e76bf0c78308f89efc4b8c9423e31568da0c340ca187a9b17aa9a4457_sk
 
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -124,7 +127,7 @@ docker run \
 
 rm -rf smart-city-ai*bna
 
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd):/home/composer/network \
@@ -135,7 +138,7 @@ docker run \
 
 
 # INSTALL THE BNA
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/smart-city-ai.bna:/home/composer/smart-city-ai.bna \
@@ -147,7 +150,8 @@ docker run \
 NETWORK_VERSION=$(grep -o '"version": *"[^"]*"' package.json | grep -o '[0-9]\.[0-9]\.[0-9]')
 
 # START THE BNA
-docker run \
+# this could time out due to iptable on linux. If so, flush iptables via iptables -F
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/smart-city-ai.bna:/home/composer/smart-city-ai.bna \
@@ -156,7 +160,7 @@ docker run \
   hyperledger/composer-cli:latest \
   network start -n smart-city-ai -V $NETWORK_VERSION -c PeerAdmin@hlfv1 -A admin -S adminpw -f /home/composer/loc-stage/bnaadmin.card
 
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/loc-stage:/home/composer/loc-stage \
@@ -165,7 +169,7 @@ docker run \
   card import -f /home/composer/loc-stage/bnaadmin.card
 
 # CREATE THE NEEDED PARTICIPANTS
-docker run \
+docker run --user ${uid} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -174,7 +178,7 @@ docker run \
 
 
 # START THE REST SERVER
-docker run \
+docker run --user ${uid} \
   -d \
   --network composer_default \
   --name rest \
@@ -182,7 +186,8 @@ docker run \
   -e COMPOSER_CARD=admin@smart-city-ai \
   -e COMPOSER_NAMESPACES=never \
   -p 3000:3000 \
-  hyperledger/composer-rest-server:latest
+   verititude/composer:latest
+#  hyperledger/composer-rest-server:latest
 
 #WAIT FOR REST SERVER TO WAKE UP
 sleep 10

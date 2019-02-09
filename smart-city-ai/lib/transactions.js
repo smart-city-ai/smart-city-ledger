@@ -36,8 +36,8 @@ async function VerifyDocument(verifyDocument) {
     const image = doc.image;
     const sealName = verifyDocument.sealName;
     
-    data = {'name': sealName, "image": image};
-    headers = {'x-api-key': key, 'Content-Type': 'application/json'};
+    var data = {'name': sealName, "image": image};
+    var headers = {'Content-Type': 'application/json'};
 
     console.log("image addr: " + endpoint + 'seal name:' + sealName);
     var st = "";
