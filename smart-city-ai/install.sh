@@ -14,6 +14,8 @@
 # REMOVE EXISTING REST SERVER, PLAYGROUND ETC
 docker rm -f $(docker ps -a | grep hyperledger/* | awk '{ print $1 }')
 docker rm -f $(docker ps -a | grep smart-city-ai | awk '{ print $1 }')
+docker rm -f $(docker ps -a |grep verititude/composer | awk '{print $1}')
+docker rmi $(docker images |grep smart-city-ai |awk '{print $1}')
 
 docker pull hyperledger/composer-playground:latest
 docker pull hyperledger/composer-cli:latest

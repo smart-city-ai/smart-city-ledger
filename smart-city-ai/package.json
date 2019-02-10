@@ -3,7 +3,7 @@
     "composer": "^0.20.6"
   },
   "name": "smart-city-ai",
-  "version": "0.0.3",
+  "version": "0.0.6",
   "description": "Smart City AI",
   "scripts": {
     "prepublish": "mkdirp ./dist && composer archive create --sourceType dir --sourceName . -a ./dist/smart-city-ai.bna",

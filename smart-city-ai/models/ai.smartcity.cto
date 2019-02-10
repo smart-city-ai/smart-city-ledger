@@ -19,8 +19,8 @@ participant Business identified by businessId {
   o String name
 }
 
-participant Office identified by OfficeId {
-  o String OfficeId
+participant Office identified by officeId {
+  o String officeId
   o String name
   o String imageServiceAddress
 }

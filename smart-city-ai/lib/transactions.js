@@ -20,24 +20,27 @@
  * @transaction
  */
 async function VerifyDocument(verifyDocument) {
+    console.log("@debug: verify doc: " + verifyDocument);
+    console.log("@debug: verify office id: " +verifyDocument.office.officeId);
+    console.log("@debug: verify doc id: " +verifyDocument.document.docId);        
+    
     // check if office exists on the network
     const officeRegistry = await  getParticipantRegistry('ai.smartcity.Office');
     const officeExists = await officeRegistry.exists(verifyDocument.office.officeId);
     if (officeExists == false) {
-        console.log('no such office ' + verifyDocument.document.office.officeId);        
+        console.log('@debug: no such office ' + verifyDocument.document.office.officeId);        
         throw new Error('Office does not exist - check Office id');
     }
     const office = await officeRegistry.get(verifyDocument.office.officeId);
-    console.log('office: ' + office);
+    console.log('@debug: office: ' + office);
     const assetRegistry = await getAssetRegistry('ai.smartcity.Document')
-    const  doc = verifyDocument.document;
-    const assetExist = await assetRegistry.exists(verifyDocument.document.doc.docId);
+    const assetExist = await assetRegistry.exists(verifyDocument.document.docId);
     if (assetExist == false) {
-        console.log('no such doc ' + verifyDocument.document.doc.docId);
+        console.log('@debug: no such doc ' + verifyDocument.document.docId);
         throw new Error('document does not exist');
     }
-    var doc = await assetRegistry.get(verifyDocument.document.doc.docId);
-    console.log('doc: ' + doc);
+    var doc = await assetRegistry.get(verifyDocument.document.docId);
+    console.log('@debug: doc: ' + doc);
     const url = office.imageServiceAddress;
     const image = doc.image;
     const sealName = verifyDocument.sealName;
@@ -45,29 +48,20 @@ async function VerifyDocument(verifyDocument) {
     const data = {'name': sealName, "image": image};
     const headers = {'Content-Type': 'application/json'};
 
-    console.log("image addr: " + endpoint + 'seal name:' + sealName);
-
-    const axios = require('axios');
-    axios({
-        method: 'post',
-        url: url,
-        headers: headers,
-        data: data
-    })
-    .then(msg => {
-        console.log('suceeded, msg: ' + msg);
-        const factory = getFactory();
-        var newStatus = factory.newConcept(sealName, msg)
-        doc.status.push(newStatus);
-        //get asset registry for Coins and Energy, and update on the ledger
-        return getAssetRegistry('ai.smartcity.Document')
-            .then(function (assetRegistry) {
-                return assetRegistry.updateAll([doc]);
-            });        
-    })
-    .catch(function (error) {
-        console.log('failed in verifying doc:' + error);
-    });
+    console.log("@debug: image addr: " + url + ', seal name:' + sealName);
+    const msg = await request.post({ uri: url, json: JSON.stringify(data) });
+    console.log("@debug: http response: " + JSON.stringify(msg));
+    const strMsg = JSON.stringify(msg);
+    const factory = getFactory();
+    var newStatus = factory.newConcept('ai.smartcity', 'sealStatus')
+    newStatus.sealName = sealName;
+    newStatus.status = strMsg;
+    doc.status.push(newStatus);
+    //get asset registry for Coins and Energy, and update on the ledger
+    return getAssetRegistry('ai.smartcity.Document')
+        .then(function (assetRegistry) {
+            return assetRegistry.updateAll([doc]);
+        });        
 }
 
 /**
