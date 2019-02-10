@@ -24,23 +24,29 @@ async function VerifyDocument(verifyDocument) {
     const officeRegistry = await  getParticipantRegistry('ai.smartcity.Office');
     const officeExists = await officeRegistry.exists(verifyDocument.office.officeId);
     if (officeExists == false) {
+        console.log('no such office ' + verifyDocument.document.office.officeId);        
         throw new Error('Office does not exist - check Office id');
     }
+    const office = await officeRegistry.get(verifyDocument.office.officeId);
+    console.log('office: ' + office);
     const assetRegistry = await getAssetRegistry('ai.smartcity.Document')
-    var  doc = erifyDocument.document;
-    const assetExist = await assetRegistry.Exists(doc.docId);
+    const  doc = verifyDocument.document;
+    const assetExist = await assetRegistry.exists(verifyDocument.document.doc.docId);
     if (assetExist == false) {
+        console.log('no such doc ' + verifyDocument.document.doc.docId);
         throw new Error('document does not exist');
-    }   
-    const url = verifyDocument.office.imageServiceAddress;
+    }
+    var doc = await assetRegistry.get(verifyDocument.document.doc.docId);
+    console.log('doc: ' + doc);
+    const url = office.imageServiceAddress;
     const image = doc.image;
     const sealName = verifyDocument.sealName;
     
-    var data = {'name': sealName, "image": image};
-    var headers = {'Content-Type': 'application/json'};
+    const data = {'name': sealName, "image": image};
+    const headers = {'Content-Type': 'application/json'};
 
     console.log("image addr: " + endpoint + 'seal name:' + sealName);
-    var st = "";
+
     const axios = require('axios');
     axios({
         method: 'post',
@@ -48,18 +54,20 @@ async function VerifyDocument(verifyDocument) {
         headers: headers,
         data: data
     })
-    .done(function( msg ) {
-        console.log(msg);
-        st = msg;
+    .then(msg => {
+        console.log('suceeded, msg: ' + msg);
+        const factory = getFactory();
+        var newStatus = factory.newConcept(sealName, msg)
+        doc.status.push(newStatus);
+        //get asset registry for Coins and Energy, and update on the ledger
+        return getAssetRegistry('ai.smartcity.Document')
+            .then(function (assetRegistry) {
+                return assetRegistry.updateAll([doc]);
+            });        
+    })
+    .catch(function (error) {
+        console.log('failed in verifying doc:' + error);
     });
-    var factory = getFactory();
-    var newStatus = factory.newConcept(sealName, st)
-    doc.status.push(newStatus);
-    //get asset registry for Coins and Energy, and update on the ledger
-    return getAssetRegistry('ai.smartcity.Document')
-        .then(function (assetRegistry) {
-            return assetRegistry.updateAll([doc]);
-        });        
 }
 
 /**
