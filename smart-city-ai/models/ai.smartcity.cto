@@ -26,8 +26,8 @@ participant Office identified by officeId {
 }
 
 asset Seal identified by sealId {
+    --> Business owner
     o String sealId
-    o String ownerID
     o String name
     o String image 
 }
@@ -47,6 +47,18 @@ transaction VerifyDocument {
     --> Office office
     --> Document document   
     o String sealName 
+}
+
+transaction VerifyDocumentBySeal {
+    --> Office office
+    --> Document document   
+    --> Seal seal
+}
+
+transaction AddSeal {
+    --> Business owner
+    o String name
+    o String image 
 }
 
 transaction CreateDemo {
