@@ -14,14 +14,18 @@
 # REMOVE EXISTING REST SERVER, PLAYGROUND ETC
 docker rm -f $(docker ps -a | grep hyperledger/* | awk '{ print $1 }')
 docker rm -f $(docker ps -a | grep smart-city-ai | awk '{ print $1 }')
-docker rm -f $(docker ps -a |grep verititude/composer | awk '{print $1}')
+docker rm -f $(docker ps -a |grep verititude | awk '{print $1}')
 docker rmi $(docker images |grep smart-city-ai |awk '{print $1}')
 
 docker pull hyperledger/composer-playground:latest
 docker pull hyperledger/composer-cli:latest
 docker pull hyperledger/composer-rest-server:latest
 
-uid=$(stat -c "%u:%g" .)
+LOCAL_UID=""
+if [ $(uname -o) == "GNU/Linux" ]; then
+    uid=$(stat -c "%u:%g" .)
+    LOCAL_UID="--user ${uid}"
+fi    
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -106,7 +110,7 @@ echo '{
 
 set -e
 # CREATE PEER ADMIN CARD AND IMPORT
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -115,7 +119,7 @@ docker run --user ${uid} \
   hyperledger/composer-cli:latest \
   card create -p loc-stage/connection.json -u PeerAdmin -r PeerAdmin -r ChannelAdmin -f /home/composer/loc-stage/PeerAdmin.card -c PeerAdmin/signcerts/Admin@org1.example.com-cert.pem -k PeerAdmin/keystore/114aab0e76bf0c78308f89efc4b8c9423e31568da0c340ca187a9b17aa9a4457_sk
 
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -129,7 +133,7 @@ docker run --user ${uid} \
 
 rm -rf smart-city-ai*bna
 
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd):/home/composer/network \
@@ -140,7 +144,7 @@ docker run --user ${uid} \
 
 
 # INSTALL THE BNA
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/smart-city-ai.bna:/home/composer/smart-city-ai.bna \
@@ -153,7 +157,7 @@ NETWORK_VERSION=$(grep -o '"version": *"[^"]*"' package.json | grep -o '[0-9]\.[
 
 # START THE BNA
 # this could time out due to iptable on linux. If so, flush iptables via iptables -F
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/smart-city-ai.bna:/home/composer/smart-city-ai.bna \
@@ -162,7 +166,7 @@ docker run --user ${uid} \
   hyperledger/composer-cli:latest \
   network start -n smart-city-ai -V $NETWORK_VERSION -c PeerAdmin@hlfv1 -A admin -S adminpw -f /home/composer/loc-stage/bnaadmin.card
 
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/loc-stage:/home/composer/loc-stage \
@@ -171,7 +175,7 @@ docker run --user ${uid} \
   card import -f /home/composer/loc-stage/bnaadmin.card
 
 # CREATE THE NEEDED PARTICIPANTS
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   --rm \
   --network composer_default \
   -v $(pwd)/.loc-card-store:/home/composer/.composer \
@@ -180,7 +184,7 @@ docker run --user ${uid} \
 
 
 # START THE REST SERVER
-docker run --user ${uid} \
+docker run ${LOCAL_UID} \
   -d \
   --network composer_default \
   --name rest \
