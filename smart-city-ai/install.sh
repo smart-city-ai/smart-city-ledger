@@ -193,4 +193,12 @@ docker run --user ${uid} \
 
 #WAIT FOR REST SERVER TO WAKE UP
 sleep 10
+
+# START IMAGE SERVICE
+docker run -d \
+       --network composer_default \
+       --name image_service \
+       -p 5000:5000 --privileged \
+       verititude/image
+
 exit 0
