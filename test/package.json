@@ -1,0 +1,20 @@
+{
+  "requires": true,
+  "lockfileVersion": 1,
+  "dependencies": {
+    "axios": "^0.18.0",
+    "fs": "0.0.1-security",
+    "pureimage": "^0.1.6",
+    "uuid": "^3.3.2",
+    "yargs": "^13.1.0"
+  },
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "test smart-ai-ledger",
+  "main": "cli.js",
+  "scripts": {
+    "test": "node cli.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
