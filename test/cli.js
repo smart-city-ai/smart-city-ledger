@@ -3,7 +3,7 @@
 // node ./cli.js --seal=seal.jpg --doc=doc.jpg --image_url=http://192.168.1.5:5000/api/v1/compare_images --blockchain_url=http://localhost:3000/api --setup=doc
 // node ./cli.js --seal=seal.jpg --doc=doc.jpg --image_url=http://192.168.1.5:5000/api/v1/compare_images --blockchain_url=http://localhost:3000/api --setup=seal
 // node ./cli.js --seal=seal.jpg --doc=doc.jpg --image_url=http://192.168.1.5:5000/api/v1/compare_images --blockchain_url=http://localhost:3000/api --setup=verify
-
+// node ./cli.js --seal=seal.jpg --doc=doc.jpg --image_url=http://192.168.1.5:5000/api/v1/compare_images --blockchain_url=http://localhost:3000/api --setup=result
 'use strict';
 
 const args = require('yargs').argv;
@@ -140,6 +140,47 @@ function verify() {
         });
 }
 
+function read_doc(){
+    axios({
+        method: 'get',
+        url: url + '/Document/' + doc_id
+    })
+        .then(response => {
+            var data = response.data;
+            const status = data.sealStatus;
+            var PImage = require('pureimage');
+            for (let i = 0; i < status.length; i ++) {
+                const st = status[i].status;
+                const seal_name = status[i].sealName;
+                // console.log("seal name: " + seal_name);
+                var st_json = JSON.parse(st);
+                const allpts = JSON.parse(st_json);
+                PImage.decodeJPEGFromStream(fs.createReadStream(doc))
+                    .then((img) => {
+                        var ctx = img.getContext('2d');
+                        for (let j = 0; j < allpts.length; j ++) {
+                            const pts = allpts[j];
+                            var x = pts[0][0], y = pts[0][1], w = pts[1][0] - pts[0][0], h = pts[1][1] - pts[0][1];
+                            var r = pts[2][0], g = pts[2][1], b = pts[2][2];
+                            ctx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b +',1.0)';
+                            for(let k = 0; k < 10; k ++) {
+                                ctx.strokeRect(x - k, y - k, w + 2*k, h + 2*k);
+                                ctx.strokeRect(x + k, y + k ,w - 2*k, h - 2*k);                                
+                            }   
+                        }
+                        var path = seal_name.split(' ').join('-') + '-' + doc;
+                        PImage.encodeJPEGToStream(img,fs.createWriteStream(path))
+                            .then(() => {
+                                console.log("write to " + path);
+                            });
+                    });
+            }
+        })
+        .catch(function (error) {
+            console.log('failed in reading doc:' + error);
+        });    
+}
+
 switch(args.setup.toLowerCase()){
 case "participant":
     setup_participants();
@@ -152,6 +193,9 @@ case "seal":
     break;
 case "verify":
     verify();
+    break;
+case "result":
+    read_doc();
     break;
 default:
     console.log("wrong args: " + args.setup);
