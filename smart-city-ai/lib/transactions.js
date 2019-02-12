@@ -56,7 +56,10 @@ async function VerifyDocument(verifyDocument) {
     var newStatus = factory.newConcept('ai.smartcity', 'sealStatus')
     newStatus.sealName = sealName;
     newStatus.status = strMsg;
-    doc.status.push(newStatus);
+    if (doc.sealStatus === undefined) {
+        doc.sealStatus = new Array();
+    }
+    doc.sealStatus.push(newStatus);
     //get asset registry for Coins and Energy, and update on the ledger
     return getAssetRegistry('ai.smartcity.Document')
         .then(function (assetRegistry) {

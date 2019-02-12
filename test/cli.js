@@ -1,4 +1,6 @@
-// usage: node ./cli.js --seal=seal.jpg --doc=doc.jpg --url=http://localhost:3000/api
+// usage:
+// node ./cli.js --seal=seal.jpg --doc=doc.jpg --url=http://localhost:3000/api --setup=1
+// node ./cli.js --seal=seal.jpg --doc=doc.jpg --url=http://localhost:3000/api --setup=0
 
 'use strict';
 
@@ -6,6 +8,7 @@ const args = require('yargs').argv;
 const seal = args.seal;
 const doc = args.doc;
 const url = args.url;
+const need_setup = args.setup;
 
 const fs = require("fs");
 const seal_data = fs.readFileSync(seal).toString('base64')
@@ -21,7 +24,7 @@ const seal_id = "seal3"; //uuidv1();
 const doc_id = "doc3"; //uuidv1();
 const office_id = "office3"; //uuidv1();
 
-async function setup() {
+function setup() {
     const p_data = {
         '$class': 'ai.smartcity.Seal',
         'sealId':  seal_id,
@@ -86,28 +89,30 @@ async function setup() {
         });
 }
 
-setup();
+if (need_setup == 1) {
+    setup();
+} else {
+    const v_data = {
+        '$class': 'ai.smartcity.VerifyDocument',
+        'office': 'resource:ai.smartcity.Office#'+office_id,
+        'document': 'resource:ai.smartcity.Document#'+doc_id,
+        'sealName': seal_name,
+        'transactionId': '',
+        'timestamp': '2020-01-11T00:00:00.00Z'
+    };
 
-const v_data = {
-    '$class': 'ai.smartcity.VerifyDocument',
-    'office': 'resource:ai.smartcity.Office#'+office_id,
-    'document': 'resource:ai.smartcity.Document#'+doc_id,
-    'sealName': seal_name,
-    'transactionId': '',
-    'timestamp': '2020-01-11T00:00:00.00Z'
-};
+    console.log(v_data);
 
-console.log(v_data);
-
-axios({
+    axios({
         method: 'post',
         url: url + '/VerifyDocument',
         headers: headers,
         data: v_data
     })
-    .then(msg => {
-        console.log('suceeded in transacting verify doc');
-    })
-    .catch(function (error) {
-        console.log('failed in transacting verify doc:' + error);
-    });
+        .then(msg => {
+            console.log('suceeded in transacting verify doc');
+        })
+        .catch(function (error) {
+            console.log('failed in transacting verify doc:' + error);
+        });
+}
